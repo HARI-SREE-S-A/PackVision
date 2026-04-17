@@ -24,6 +24,8 @@ const navigation = [
   { name: 'Applications', href: '/applications', icon: Package },
   { name: 'Workflows', href: '/workflows', icon: GitBranch },
   { name: 'Changes', href: '/changes', icon: FileText },
+  { name: 'Identities', href: '/identities', icon: Users },
+  { name: 'Assets & Licensing', href: '/assets', icon: Package },
   { name: 'Communications', href: '/communications', icon: MessageSquare },
   { name: 'Vulnerabilities', href: '/vulnerabilities', icon: Shield },
   { name: 'Infrastructure', href: '/infrastructure', icon: Server },

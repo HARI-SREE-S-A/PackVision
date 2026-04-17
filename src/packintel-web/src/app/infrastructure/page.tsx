@@ -19,6 +19,8 @@ import {
   Globe,
   RefreshCw,
   Maximize2,
+  BatteryWarning,
+  ActivitySquare,
 } from 'lucide-react';
 
 const mockRegions = [
@@ -248,6 +250,44 @@ function EstateOverview() {
   );
 }
 
+function HardwareTelemetry() {
+  return (
+    <div className="card p-4 mb-6 relative overflow-hidden group">
+       <div className="absolute top-0 right-0 w-48 h-48 bg-severity-medium/5 rounded-bl-full -z-10 group-hover:scale-110 transition-transform" />
+       <h3 className="font-semibold mb-4 flex items-center gap-2">
+         <ActivitySquare className="w-5 h-5 text-accent-primary" />
+         Proactive Hardware Telemetry
+       </h3>
+       
+       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+         {/* BSOD Tracker */}
+         <div className="p-3 border border-border rounded-xl bg-background-secondary flex justify-between items-center">
+            <div>
+               <p className="text-sm text-muted-foreground font-medium">BSOD Crash Frequency</p>
+               <h4 className="text-2xl font-bold mt-1 text-severity-medium">14.2%</h4>
+               <p className="text-[10px] text-muted-foreground mt-1 text-severity-critical">↑ 2.1% across Dell Latitude fleet in 7 days</p>
+            </div>
+            <div className="p-3 bg-severity-medium/10 rounded-full">
+               <AlertTriangle className="w-6 h-6 text-severity-medium" />
+            </div>
+         </div>
+
+         {/* Battery Health Tracker */}
+         <div className="p-3 border border-border rounded-xl bg-background-secondary flex justify-between items-center">
+            <div>
+               <p className="text-sm text-muted-foreground font-medium">Battery Degradation Matrix</p>
+               <h4 className="text-2xl font-bold mt-1 text-accent-warning">84 Devices</h4>
+               <p className="text-[10px] text-muted-foreground mt-1 text-accent-warning">Batteries drop below 60% capacity</p>
+            </div>
+            <div className="p-3 bg-accent-warning/10 rounded-full">
+               <Shield className="w-6 h-6 text-accent-warning" />
+            </div>
+         </div>
+       </div>
+    </div>
+  );
+}
+
 function GeographicHeatmap() {
   return (
     <div className="card p-4">
@@ -355,6 +395,9 @@ export default function InfrastructurePage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Regions & Map */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Hardware Telemetry */}
+          <HardwareTelemetry />
+
           {/* Geographic Heatmap */}
           <GeographicHeatmap />
 
