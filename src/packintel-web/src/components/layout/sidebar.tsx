@@ -29,6 +29,7 @@ const navigation = [
   { name: 'Communications', href: '/communications', icon: MessageSquare },
   { name: 'Vulnerabilities', href: '/vulnerabilities', icon: Shield },
   { name: 'Infrastructure', href: '/infrastructure', icon: Server },
+  { name: 'Team Workload', href: '/teams', icon: Users },
 ];
 
 const adminNavigation = [

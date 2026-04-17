@@ -1,6 +1,7 @@
 'use client';
 
 import { useDashboardStore, useVulnerabilityStore } from '@/store';
+import Link from 'next/link';
 import {
   formatNumber,
   formatPercent,
@@ -22,14 +23,16 @@ import {
   Zap,
   ArrowUpRight,
   ArrowDownRight,
+  Users,
+  ChevronRight,
 } from 'lucide-react';
 
 // Mock data for demonstration
 const mockMetrics = [
-  { name: 'Active VMs', value: 45230, previousValue: 44820, unit: '', category: 'vm' },
-  { name: 'Daily Throughput', value: 47, previousValue: 42, unit: 'apps', category: 'throughput' },
-  { name: 'Deployment Success', value: 97.3, previousValue: 96.8, unit: '%', category: 'success' },
-  { name: 'Monthly Savings', value: 127500, previousValue: 115000, unit: '$', category: 'savings' },
+  { name: 'Active VMs', value: 45230, previousValue: 44820, unit: '', category: 'vm', href: '/infrastructure' },
+  { name: 'Daily Throughput', value: 47, previousValue: 42, unit: 'apps', category: 'throughput', href: '/applications' },
+  { name: 'Deployment Success', value: 97.3, previousValue: 96.8, unit: '%', category: 'success', href: '/workflows' },
+  { name: 'Monthly Savings', value: 127500, previousValue: 115000, unit: '$', category: 'savings', href: '/assets' },
 ];
 
 const mockAlerts = [
@@ -98,54 +101,61 @@ function KPICard({
   previousValue,
   unit,
   icon: Icon,
-  trendUp,
+  href,
 }: {
   title: string;
   value: number;
   previousValue?: number;
   unit: string;
   icon: React.ElementType;
-  trendUp?: boolean;
+  href: string;
 }) {
   const trend = previousValue ? ((value - previousValue) / previousValue) * 100 : 0;
 
   return (
-    <div className="card p-4">
-      <div className="flex items-center justify-between mb-3">
-        <div className="p-2 rounded-lg bg-accent-primary/10">
-          <Icon className="w-5 h-5 text-accent-primary" />
-        </div>
-        {trend !== 0 && (
-          <div className={`flex items-center gap-1 text-xs font-medium ${trend > 0 ? 'text-accent-success' : 'text-accent-danger'}`}>
-            {trend > 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-            {formatPercent(Math.abs(trend))}
+    <Link href={href}>
+      <div className="card p-4 card-hover cursor-pointer group">
+        <div className="flex items-center justify-between mb-3">
+          <div className="p-2 rounded-lg bg-accent-primary/10">
+            <Icon className="w-5 h-5 text-accent-primary" />
           </div>
-        )}
+          <div className="flex items-center gap-2">
+            {trend !== 0 && (
+              <div className={`flex items-center gap-1 text-xs font-medium ${trend > 0 ? 'text-accent-success' : 'text-accent-danger'}`}>
+                {trend > 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                {formatPercent(Math.abs(trend))}
+              </div>
+            )}
+            <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+          </div>
+        </div>
+        <p className="kpi-label">{title}</p>
+        <p className="kpi-value">
+          {unit === '$' ? `$${formatNumber(value)}` : unit === '%' ? formatPercent(value) : formatNumber(value)}
+          {unit && unit !== '$' && unit !== '%' && <span className="text-sm text-muted-foreground ml-1">{unit}</span>}
+        </p>
       </div>
-      <p className="kpi-label">{title}</p>
-      <p className="kpi-value">
-        {unit === '$' ? `$${formatNumber(value)}` : unit === '%' ? formatPercent(value) : formatNumber(value)}
-        {unit && unit !== '$' && unit !== '%' && <span className="text-sm text-muted-foreground ml-1">{unit}</span>}
-      </p>
-    </div>
+    </Link>
   );
 }
 
 function AlertCard({ alert }: { alert: typeof mockAlerts[0] }) {
   return (
-    <div className={`p-4 rounded-lg border ${getSeverityBgColor(alert.severity)}`}>
-      <div className="flex items-start gap-3">
-        <AlertTriangle className={`w-5 h-5 mt-0.5 ${getSeverityColor(alert.severity)}`} />
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className={`badge ${`badge-${alert.severity}`}`}>{alert.severity}</span>
-            <span className="text-xs text-muted-foreground">{formatRelativeTime(alert.createdAt)}</span>
+    <Link href="/vulnerabilities">
+      <div className={`p-4 rounded-lg border cursor-pointer hover:opacity-80 transition-opacity ${getSeverityBgColor(alert.severity)}`}>
+        <div className="flex items-start gap-3">
+          <AlertTriangle className={`w-5 h-5 mt-0.5 ${getSeverityColor(alert.severity)}`} />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className={`badge ${`badge-${alert.severity}`}`}>{alert.severity}</span>
+              <span className="text-xs text-muted-foreground">{formatRelativeTime(alert.createdAt)}</span>
+            </div>
+            <p className="font-medium mt-1">{alert.title}</p>
+            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{alert.message}</p>
           </div>
-          <p className="font-medium mt-1">{alert.title}</p>
-          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{alert.message}</p>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
 
@@ -153,41 +163,43 @@ function RolloutCard({ rollout }: { rollout: typeof mockRollouts[0] }) {
   const progress = (rollout.completedDevices / rollout.totalDevices) * 100;
 
   return (
-    <div className="card p-4">
-      <div className="flex items-center justify-between mb-3">
-        <div>
-          <p className="font-medium">{rollout.applicationName}</p>
-          <p className="text-sm text-muted-foreground">v{rollout.packageVersion}</p>
-        </div>
-        <span className={`badge ${rollout.status === 'in_progress' ? 'badge-medium' : 'badge-info'}`}>
-          {rollout.status.replace('_', ' ')}
-        </span>
-      </div>
-
-      <div className="mb-3">
-        <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-          <span>{formatNumber(rollout.completedDevices)} / {formatNumber(rollout.totalDevices)} devices</span>
-          <span>{formatPercent(progress, 0)}</span>
-        </div>
-        <div className="h-2 bg-background-tertiary rounded-full overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-accent-primary to-accent-secondary rounded-full transition-all"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      </div>
-
-      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-        {rollout.failedDevices > 0 && (
-          <span className="flex items-center gap-1 text-accent-danger">
-            <AlertTriangle className="w-3 h-3" /> {rollout.failedDevices} failed
+    <Link href="/applications">
+      <div className="card p-4 card-hover cursor-pointer">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <p className="font-medium">{rollout.applicationName}</p>
+            <p className="text-sm text-muted-foreground">v{rollout.packageVersion}</p>
+          </div>
+          <span className={`badge ${rollout.status === 'in_progress' ? 'badge-medium' : 'badge-info'}`}>
+            {rollout.status.replace('_', ' ')}
           </span>
-        )}
-        <span className="flex items-center gap-1">
-          <Clock className="w-3 h-3" /> ETA: {new Date(rollout.estimatedCompletionAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-        </span>
+        </div>
+
+        <div className="mb-3">
+          <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+            <span>{formatNumber(rollout.completedDevices)} / {formatNumber(rollout.totalDevices)} devices</span>
+            <span>{formatPercent(progress, 0)}</span>
+          </div>
+          <div className="h-2 bg-background-tertiary rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-accent-primary to-accent-secondary rounded-full transition-all"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          {rollout.failedDevices > 0 && (
+            <span className="flex items-center gap-1 text-accent-danger">
+              <AlertTriangle className="w-3 h-3" /> {rollout.failedDevices} failed
+            </span>
+          )}
+          <span className="flex items-center gap-1">
+            <Clock className="w-3 h-3" /> ETA: {new Date(rollout.estimatedCompletionAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </span>
+        </div>
       </div>
-    </div>
+    </Link>
   );
 }
 
@@ -222,10 +234,10 @@ function AIHealthWidget() {
 
 function QuickActions() {
   const actions = [
-    { label: 'Create Package Request', icon: Package, color: 'accent-primary' },
-    { label: 'Launch AI Assistant', icon: Bot, color: 'accent-secondary' },
-    { label: 'Open Workflow Automation', icon: Zap, color: 'accent-tertiary' },
-    { label: 'View Analytics', icon: TrendingUp, color: 'accent-primary' },
+    { label: 'Create Package', icon: Package, href: '/applications' },
+    { label: 'AI Assistant', icon: Bot, href: '#chat' },
+    { label: 'Workflow Studio', icon: Zap, href: '/workflows' },
+    { label: 'Team Workload', icon: Users, href: '/teams' },
   ];
 
   return (
@@ -233,13 +245,14 @@ function QuickActions() {
       <h3 className="font-semibold mb-4">Quick Actions</h3>
       <div className="grid grid-cols-2 gap-2">
         {actions.map((action) => (
-          <button
+          <Link
             key={action.label}
-            className={`flex items-center gap-2 px-3 py-2 rounded-lg bg-${action.color}/10 text-${action.color} hover:bg-${action.color}/20 transition-colors`}
+            href={action.href}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-background-tertiary hover:bg-accent-primary/10 text-foreground hover:text-accent-primary transition-colors"
           >
             <action.icon className="w-4 h-4" />
             <span className="text-sm font-medium">{action.label}</span>
-          </button>
+          </Link>
         ))}
       </div>
     </div>
@@ -257,10 +270,10 @@ export default function DashboardPage() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard title="Active VMs" value={mockMetrics[0].value} previousValue={mockMetrics[0].previousValue} unit="" icon={Server} trendUp />
-        <KPICard title="Daily Throughput" value={mockMetrics[1].value} previousValue={mockMetrics[1].previousValue} unit="apps" icon={Package} trendUp />
-        <KPICard title="Deployment Success" value={mockMetrics[2].value} previousValue={mockMetrics[2].previousValue} unit="%" icon={CheckCircle} />
-        <KPICard title="Monthly Savings" value={mockMetrics[3].value} previousValue={mockMetrics[3].previousValue} unit="$" icon={DollarSign} trendUp />
+        <KPICard title="Active VMs" value={mockMetrics[0].value} previousValue={mockMetrics[0].previousValue} unit="" icon={Server} href="/infrastructure" />
+        <KPICard title="Daily Throughput" value={mockMetrics[1].value} previousValue={mockMetrics[1].previousValue} unit="apps" icon={Package} href="/applications" />
+        <KPICard title="Deployment Success" value={mockMetrics[2].value} previousValue={mockMetrics[2].previousValue} unit="%" icon={CheckCircle} href="/workflows" />
+        <KPICard title="Monthly Savings" value={mockMetrics[3].value} previousValue={mockMetrics[3].previousValue} unit="$" icon={DollarSign} href="/assets" />
       </div>
 
       {/* Main Content Grid */}
@@ -274,7 +287,9 @@ export default function DashboardPage() {
                 <Activity className="w-5 h-5 text-accent-primary" />
                 Active Rollouts
               </h2>
-              <button className="text-sm text-accent-primary hover:underline">View all</button>
+              <Link href="/applications" className="text-sm text-accent-primary hover:underline flex items-center gap-1">
+                View all <ChevronRight className="w-3 h-3" />
+              </Link>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {mockRollouts.map((rollout) => (
@@ -290,7 +305,9 @@ export default function DashboardPage() {
                 <Shield className="w-5 h-5 text-accent-danger" />
                 Critical Alerts
               </h2>
-              <button className="text-sm text-accent-primary hover:underline">View all</button>
+              <Link href="/vulnerabilities" className="text-sm text-accent-primary hover:underline flex items-center gap-1">
+                View all <ChevronRight className="w-3 h-3" />
+              </Link>
             </div>
             <div className="space-y-3">
               {mockAlerts.map((alert) => (
@@ -329,9 +346,9 @@ export default function DashboardPage() {
                 <span className="font-medium">234</span>
               </div>
             </div>
-            <button className="w-full btn btn-outline mt-4 text-sm">
+            <Link href="/vulnerabilities" className="w-full btn btn-outline mt-4 text-sm inline-flex justify-center">
               View Vulnerability Center
-            </button>
+            </Link>
           </div>
         </div>
       </div>
