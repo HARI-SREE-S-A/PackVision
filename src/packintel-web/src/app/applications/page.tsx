@@ -24,8 +24,10 @@ import {
   X,
   Trash2,
   Eye,
+  Users,
 } from 'lucide-react';
 import { AIPackagingAgent } from '@/components/packaging/AIPackagingAgent';
+import { UserExportPanel } from '@/components/applications/UserExportPanel';
 
 // Mock application data
 const mockApplications = [
@@ -169,6 +171,7 @@ function ApplicationDetailPanel({
   const [deployStream, setDeployStream] = useState<string[]>([]);
   const [isDeploying, setIsDeploying] = useState(false);
   const [catalogSync, setCatalogSync] = useState<'idle' | 'syncing' | 'synced'>('idle');
+  const [showUserExport, setShowUserExport] = useState(false);
 
   const startDeployment = () => {
     setIsDeploying(true);
@@ -261,9 +264,11 @@ function ApplicationDetailPanel({
               <AlertTriangle className="w-5 h-5 mb-1 text-severity-high" />
               <span className="text-xs">Scan Vulnerabilities</span>
             </button>
-            <button className="btn btn-outline flex-col items-center py-3 h-auto">
-              <Plus className="w-5 h-5 mb-1" />
-              <span className="text-xs">New Version</span>
+            <button className="btn btn-outline flex-col items-center py-3 h-auto"
+              onClick={() => setShowUserExport(true)}
+            >
+              <Users className="w-5 h-5 mb-1 text-accent-tertiary" />
+              <span className="text-xs">Export Users</span>
             </button>
           </div>
 
@@ -334,6 +339,16 @@ function ApplicationDetailPanel({
                 )}
               </div>
             </div>
+          )}
+
+          {/* User Export Panel */}
+          {showUserExport && (
+            <UserExportPanel
+              appName={app.name}
+              latestVersion={app.version}
+              appOwner={app.owner}
+              onClose={() => setShowUserExport(false)}
+            />
           )}
         </div>
       </div>
