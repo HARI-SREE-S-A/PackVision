@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useDashboardStore, useVulnerabilityStore } from '@/store';
 import Link from 'next/link';
 import {
@@ -25,6 +26,9 @@ import {
   ArrowDownRight,
   Users,
   ChevronRight,
+  RefreshCw,
+  Settings,
+  ExternalLink,
 } from 'lucide-react';
 
 // Mock data for demonstration
@@ -203,18 +207,42 @@ function RolloutCard({ rollout }: { rollout: typeof mockRollouts[0] }) {
   );
 }
 
-function AIHealthWidget() {
+function AIHealthWidget({ onRefresh }: { onRefresh?: () => void }) {
+  const [lastRefresh, setLastRefresh] = useState(new Date());
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
   const services = [
     { name: 'Azure OpenAI', ...mockAiHealth.azureOpenAI },
     { name: 'GitHub Copilot', ...mockAiHealth.copilot },
     { name: 'Microsoft Graph', ...mockAiHealth.graph },
   ];
 
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    setLastRefresh(new Date());
+    setTimeout(() => setIsRefreshing(false), 1000);
+    onRefresh?.();
+  };
+
   return (
     <div className="card p-4">
-      <div className="flex items-center gap-2 mb-4">
-        <Bot className="w-5 h-5 text-accent-secondary" />
-        <h3 className="font-semibold">AI Services Health</h3>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Bot className="w-5 h-5 text-accent-secondary" />
+          <h3 className="font-semibold">AI Services Health</h3>
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="text-[10px] text-muted-foreground">
+            {lastRefresh.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+          </span>
+          <button
+            onClick={handleRefresh}
+            className="p-1 hover:bg-background-tertiary rounded transition-colors"
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`w-3 h-3 text-muted-foreground ${isRefreshing ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
       </div>
 
       <div className="space-y-3">
@@ -228,6 +256,15 @@ function AIHealthWidget() {
           </div>
         ))}
       </div>
+
+      <Link
+        href="/admin"
+        className="w-full btn btn-outline mt-4 text-sm inline-flex items-center justify-center gap-2 hover:bg-accent-secondary/10"
+      >
+        <Settings className="w-3 h-3" />
+        AI Control Center
+        <ExternalLink className="w-3 h-3" />
+      </Link>
     </div>
   );
 }
@@ -235,7 +272,7 @@ function AIHealthWidget() {
 function QuickActions() {
   const actions = [
     { label: 'Create Package', icon: Package, href: '/applications' },
-    { label: 'AI Assistant', icon: Bot, href: '#chat' },
+    { label: 'AI Assistant', icon: Bot, href: '/chat' },
     { label: 'Workflow Studio', icon: Zap, href: '/workflows' },
     { label: 'Team Workload', icon: Users, href: '/teams' },
   ];
@@ -259,6 +296,55 @@ function QuickActions() {
   );
 }
 
+function TeamOverview() {
+  const towers = [
+    { name: 'App Packaging', count: 2, tasks: 4, key: 'packaging' },
+    { name: 'Engineering', count: 2, tasks: 4, key: 'engineering' },
+    { name: 'Operations', count: 2, tasks: 5, key: 'operations' },
+  ];
+
+  return (
+    <div className="card p-4">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Users className="w-5 h-5 text-accent-primary" />
+          <h3 className="font-semibold">EUC Team Status</h3>
+        </div>
+        <Link href="/teams" className="text-xs text-accent-primary hover:underline flex items-center gap-1">
+          Manage <ChevronRight className="w-3 h-3" />
+        </Link>
+      </div>
+
+      <div className="space-y-3">
+        {towers.map((tower) => (
+          <Link
+            key={tower.key}
+            href={`/teams?tower=${tower.key}`}
+            className="flex items-center justify-between p-2 rounded-lg hover:bg-background-tertiary/30 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-accent-primary/10 flex items-center justify-center">
+                <Package className="w-4 h-4 text-accent-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-medium">{tower.name}</p>
+                <p className="text-xs text-muted-foreground">{tower.count} members</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <p className="text-sm font-semibold text-accent-primary">{tower.tasks}</p>
+                <p className="text-[10px] text-muted-foreground">active tasks</p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   return (
     <div className="space-y-6 animate-in">
@@ -273,7 +359,7 @@ export default function DashboardPage() {
         <KPICard title="Active VMs" value={mockMetrics[0].value} previousValue={mockMetrics[0].previousValue} unit="" icon={Server} href="/infrastructure" />
         <KPICard title="Daily Throughput" value={mockMetrics[1].value} previousValue={mockMetrics[1].previousValue} unit="apps" icon={Package} href="/applications" />
         <KPICard title="Deployment Success" value={mockMetrics[2].value} previousValue={mockMetrics[2].previousValue} unit="%" icon={CheckCircle} href="/workflows" />
-        <KPICard title="Monthly Savings" value={mockMetrics[3].value} previousValue={mockMetrics[3].previousValue} unit="$" icon={DollarSign} href="/assets" />
+        <KPICard title="Monthly Savings" value={mockMetrics[3].value} previousValue={mockMetrics[3].previousValue} unit="$" icon={DollarSign} href="/infrastructure" />
       </div>
 
       {/* Main Content Grid */}
@@ -317,9 +403,10 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Right Column - AI Health & Quick Actions */}
+        {/* Right Column - AI Health, Team Status & Quick Actions */}
         <div className="space-y-6">
           <AIHealthWidget />
+          <TeamOverview />
           <QuickActions />
 
           {/* Vulnerability Summary */}
@@ -346,7 +433,8 @@ export default function DashboardPage() {
                 <span className="font-medium">234</span>
               </div>
             </div>
-            <Link href="/vulnerabilities" className="w-full btn btn-outline mt-4 text-sm inline-flex justify-center">
+            <Link href="/vulnerabilities" className="w-full btn btn-outline mt-4 text-sm inline-flex justify-center items-center gap-2">
+              <Shield className="w-3 h-3" />
               View Vulnerability Center
             </Link>
           </div>
