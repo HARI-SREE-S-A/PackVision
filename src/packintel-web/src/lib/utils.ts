@@ -5,28 +5,36 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatDate(date: string | Date): string {
+export function formatDate(date: string | Date | undefined): string {
+  if (!date) return 'N/A';
+  const parsed = new Date(date);
+  if (isNaN(parsed.getTime())) return String(date);
   return new Intl.DateTimeFormat('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
-  }).format(new Date(date));
+  }).format(parsed);
 }
 
-export function formatDateTime(date: string | Date): string {
+export function formatDateTime(date: string | Date | undefined): string {
+  if (!date) return 'N/A';
+  const parsed = new Date(date);
+  if (isNaN(parsed.getTime())) return String(date);
   return new Intl.DateTimeFormat('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
-  }).format(new Date(date));
+  }).format(parsed);
 }
 
-export function formatRelativeTime(date: string | Date): string {
+export function formatRelativeTime(date: string | Date | undefined): string {
+  if (!date) return 'N/A';
+  const parsed = new Date(date);
+  if (isNaN(parsed.getTime())) return String(date);
   const now = new Date();
-  const then = new Date(date);
-  const diffInSeconds = Math.floor((now.getTime() - then.getTime()) / 1000);
+  const diffInSeconds = Math.floor((now.getTime() - parsed.getTime()) / 1000);
 
   if (diffInSeconds < 60) return 'Just now';
   if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
