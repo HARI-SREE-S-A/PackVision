@@ -160,6 +160,36 @@ function ValidationNode({ data }: { data: any }) {
   );
 }
 
+function SnowActionNode({ data }: { data: any }) {
+  return (
+    <div className="px-4 py-3 rounded-lg bg-accent-success/10 border-2 border-accent-success/30 min-w-[180px]">
+      <Handle type="target" position={Position.Top} className="w-3 h-3 border-2 border-accent-success bg-background" />
+      <div className="flex items-center gap-2 mb-2">
+        <FileText className="w-4 h-4 text-accent-success" />
+        <span className="text-xs font-semibold text-accent-success uppercase">SNOW Incident</span>
+      </div>
+      <p className="font-medium text-sm">{data.label}</p>
+      <p className="text-xs text-muted-foreground mt-1">{data.description || 'Create SNOW Incident'}</p>
+      <Handle type="source" position={Position.Bottom} className="w-3 h-3 border-2 border-accent-success bg-background" />
+    </div>
+  );
+}
+
+function SnowApprovalNode({ data }: { data: any }) {
+  return (
+    <div className="px-4 py-3 rounded-lg bg-accent-success/10 border-2 border-accent-success/30 min-w-[180px]">
+      <Handle type="target" position={Position.Top} className="w-3 h-3 border-2 border-accent-success bg-background" />
+      <div className="flex items-center gap-2 mb-2">
+        <Users className="w-4 h-4 text-accent-success" />
+        <span className="text-xs font-semibold text-accent-success uppercase">SNOW CAB</span>
+      </div>
+      <p className="font-medium text-sm">{data.label}</p>
+      <p className="text-xs text-muted-foreground mt-1">{data.approver || 'CAB Approval Group'}</p>
+      <Handle type="source" position={Position.Bottom} className="w-3 h-3 border-2 border-accent-success bg-background" />
+    </div>
+  );
+}
+
 const nodeTypes = {
   trigger: TriggerNode,
   action: ActionNode,
@@ -168,6 +198,8 @@ const nodeTypes = {
   approval: ApprovalNode,
   notification: NotificationNode,
   validation: ValidationNode,
+  snow_action: SnowActionNode,
+  snow_approval: SnowApprovalNode,
 };
 
 // Mock workflow data
@@ -338,6 +370,8 @@ function BlockPalette({ onDragStart }: { onDragStart: (event: React.DragEvent, n
     { type: 'approval', icon: Users, label: 'Approval', color: 'accent-warning', description: 'Human gate' },
     { type: 'notification', icon: Bell, label: 'Notification', color: 'accent-info', description: 'Send alert' },
     { type: 'validation', icon: CheckCircle, label: 'Validation', color: 'accent-success', description: 'Check compliance' },
+    { type: 'snow_action', icon: FileText, label: 'SNOW Incident', color: 'accent-success', description: 'Create Ticket' },
+    { type: 'snow_approval', icon: Users, label: 'SNOW CAB Gate', color: 'accent-success', description: 'Change Approval' },
   ];
 
   return (

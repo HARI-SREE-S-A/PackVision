@@ -293,6 +293,9 @@ interface SettingsState {
   azureClientSecret: string;
   intuneEndpoint: string;
   geminiApiKey: string;
+  serviceNowInstanceUrl: string;
+  serviceNowApiKey: string;
+  mcpAccessToken: string;
   isMockMode: boolean; // if true, bypass real integrations
   updateSetting: <K extends keyof Omit<SettingsState, 'updateSetting'>>(key: K, value: SettingsState[K]) => void;
 }
@@ -305,6 +308,9 @@ export const useSettingsStore = create<SettingsState>()(
       azureClientSecret: '',
       intuneEndpoint: 'https://graph.microsoft.com/beta/deviceManagement',
       geminiApiKey: '',
+      serviceNowInstanceUrl: '',
+      serviceNowApiKey: '',
+      mcpAccessToken: '',
       isMockMode: true,
       updateSetting: (key, value) => set({ [key]: value }),
     }),

@@ -348,10 +348,13 @@ export default function AdminPage() {
     azureClientSecret,
     intuneEndpoint,
     geminiApiKey,
+    serviceNowInstanceUrl,
+    serviceNowApiKey,
+    mcpAccessToken,
     isMockMode,
     updateSetting,
   } = useSettingsStore();
-  const [showSecrets, setShowSecrets] = useState({ azure: false, gemini: false });
+  const [showSecrets, setShowSecrets] = useState({ azure: false, gemini: false, snow: false, mcp: false });
 
   return (
     <div className="space-y-6 animate-in">
@@ -553,6 +556,79 @@ export default function AdminPage() {
                     </button>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* ServiceNow Card */}
+            <div className="card glass hover:border-accent-success/50 transition-colors relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-accent-success/5 rounded-bl-full -z-10 group-hover:scale-110 transition-transform" />
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-lg bg-accent-success/10">
+                  <FileText className="w-5 h-5 text-accent-success" />
+                </div>
+                <h3 className="font-semibold text-lg">ServiceNow ITSM</h3>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Instance URL</label>
+                  <input
+                    type="text"
+                    value={serviceNowInstanceUrl}
+                    onChange={(e) => updateSetting('serviceNowInstanceUrl', e.target.value)}
+                    placeholder="https://dev12345.service-now.com"
+                    className="input mt-1 bg-background"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">API Token</label>
+                  <div className="relative mt-1">
+                    <input
+                      type={showSecrets.snow ? 'text' : 'password'}
+                      value={serviceNowApiKey}
+                      onChange={(e) => updateSetting('serviceNowApiKey', e.target.value)}
+                      placeholder="Enter token..."
+                      className="input bg-background pr-10"
+                    />
+                    <button
+                      onClick={() => setShowSecrets(s => ({ ...s, snow: !s.snow }))}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showSecrets.snow ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* MCP Context Servers */}
+            <div className="card glass hover:border-severity-medium/50 transition-colors relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-severity-medium/5 rounded-bl-full -z-10 group-hover:scale-110 transition-transform" />
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-lg bg-severity-medium/10">
+                  <Server className="w-5 h-5 text-severity-medium" />
+                </div>
+                <h3 className="font-semibold text-lg">MCP API Server</h3>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Access Token</label>
+                  <div className="relative mt-1">
+                    <input
+                      type={showSecrets.mcp ? 'text' : 'password'}
+                      value={mcpAccessToken}
+                      onChange={(e) => updateSetting('mcpAccessToken', e.target.value)}
+                      placeholder="MCP access token..."
+                      className="input bg-background pr-10"
+                    />
+                    <button
+                      onClick={() => setShowSecrets(s => ({ ...s, mcp: !s.mcp }))}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showSecrets.mcp ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">URL: <code>https://packintel/api/mcp</code></p>
               </div>
             </div>
           </div>

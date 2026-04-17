@@ -7,6 +7,8 @@ import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
 import { useUIStore } from '@/store';
 
+import { ChatBubble } from '@/components/chat/ChatBubble';
+
 function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { sidebarCollapsed, toggleSidebar } = useUIStore();
 
@@ -21,6 +23,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
       >
         <div className="p-6">{children}</div>
       </main>
+      <ChatBubble />
     </div>
   );
 }

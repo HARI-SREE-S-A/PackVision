@@ -22,10 +22,10 @@ import {
   Bot,
   GitBranch,
   X,
-  Edit,
   Trash2,
   Eye,
 } from 'lucide-react';
+import { AIPackagingAgent } from '@/components/packaging/AIPackagingAgent';
 
 // Mock application data
 const mockApplications = [
@@ -345,6 +345,7 @@ export default function ApplicationsPage() {
   const [selectedApp, setSelectedApp] = useState<typeof mockApplications[0] | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
+  const [showAgent, setShowAgent] = useState(false);
 
   const filteredApps = mockApplications.filter((app) => {
     const matchesSearch =
@@ -369,9 +370,9 @@ export default function ApplicationsPage() {
             <Filter className="w-4 h-4" />
             Advanced Filter
           </button>
-          <button className="btn btn-primary">
-            <Plus className="w-4 h-4" />
-            New Application
+          <button className="btn btn-primary" onClick={() => setShowAgent(true)}>
+            <Bot className="w-4 h-4" />
+            AI Package Factory
           </button>
         </div>
       </div>
@@ -473,6 +474,11 @@ export default function ApplicationsPage() {
           app={selectedApp}
           onClose={() => setSelectedApp(null)}
         />
+      )}
+
+      {/* AI Agent Modal */}
+      {showAgent && (
+        <AIPackagingAgent onClose={() => setShowAgent(false)} />
       )}
     </div>
   );
