@@ -23,6 +23,7 @@ import {
   Trash2,
   Edit,
   ChevronRight,
+  Server,
 } from 'lucide-react';
 
 // Mock integrations data

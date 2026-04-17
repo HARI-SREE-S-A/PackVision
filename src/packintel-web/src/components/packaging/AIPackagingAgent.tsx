@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Bot, UploadCloud, FileType, CheckCircle, ChevronRight, X, GitBranch, Play, Server, ServerCrash } from 'lucide-react';
+import { Bot, UploadCloud, FileType, CheckCircle, ChevronRight, X, GitBranch, Play, Server, ServerCrash, RefreshCw } from 'lucide-react';
 
 interface AIPackagingAgentProps {
   onClose: () => void;
