@@ -27,13 +27,11 @@ const navigation = [
   { name: 'Communications', href: '/communications', icon: MessageSquare },
   { name: 'Vulnerabilities', href: '/vulnerabilities', icon: Shield },
   { name: 'Infrastructure', href: '/infrastructure', icon: Server },
-  { name: 'Analytics', href: '/analytics', icon: BarChart3 },
-  { name: 'AI Control', href: '/ai-control', icon: Bot },
+  { name: 'AI Chatbot', href: '/chat', icon: Bot },
 ];
 
 const adminNavigation = [
-  { name: 'Users', href: '/admin/users', icon: Users },
-  { name: 'Integrations', href: '/admin/integrations', icon: Plug },
+  { name: 'Admin Dashboard', href: '/admin', icon: Plug },
 ];
 
 interface SidebarProps {
