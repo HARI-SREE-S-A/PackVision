@@ -10,7 +10,12 @@ export async function POST(request: Request) {
 
     if (!isMockMode && apiKey && apiKey.length > 5) {
       try {
-        const contents = messages.map((m: any) => ({
+        let conversationHistory = messages;
+        if (conversationHistory.length > 0 && conversationHistory[0].role === 'assistant') {
+          conversationHistory = conversationHistory.slice(1);
+        }
+
+        const contents = conversationHistory.map((m: any) => ({
           role: m.role === 'user' ? 'user' : 'model',
           parts: [{ text: m.content }]
         }));
