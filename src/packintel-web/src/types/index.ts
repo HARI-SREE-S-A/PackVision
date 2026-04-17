@@ -338,6 +338,16 @@ export interface ChangeRequest {
   approvals: ChangeApproval[];
 }
 
+export interface ChangeApproval {
+  id: string;
+  changeId: string;
+  approver: string;
+  approverEmail: string;
+  status: 'pending' | 'approved' | 'rejected';
+  reason?: string;
+  approvedAt?: string;
+}
+
 // ============ Users ============
 
 export interface User {
@@ -359,6 +369,13 @@ export interface Role {
   description: string;
   type: 'platform_admin' | 'euc_operator' | 'packaging_engineer' | 'engineering_lead' | 'service_desk_analyst' | 'approver' | 'auditor' | 'executive_viewer';
   permissions: Permission[];
+}
+
+export interface Permission {
+  id: string;
+  name: string;
+  action: string;
+  resource: string;
 }
 
 // ============ API Response Types ============

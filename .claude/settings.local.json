@@ -4,7 +4,8 @@
       "Bash(dotnet new *)",
       "Bash(where.exe dotnet *)",
       "Bash(find /c/Program* -name \"dotnet.exe\")",
-      "Bash(\"/c/Program Files \\(x86\\)/dotnet/dotnet.exe\" new sln -n PackIntel)"
+      "Bash(\"/c/Program Files \\(x86\\)/dotnet/dotnet.exe\" new sln -n PackIntel)",
+      "Bash(npx vercel *)"
     ]
   }
 }

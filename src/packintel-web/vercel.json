@@ -5,6 +5,6 @@
   "installCommand": "npm install",
   "regions": ["iad1"],
   "env": {
-    "NEXT_PUBLIC_API_URL": "@packintel_api_url"
+    "NEXT_PUBLIC_API_URL": "https://api.packintel.dev"
   }
 }

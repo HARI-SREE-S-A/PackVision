@@ -380,7 +380,7 @@ function PropertiesPanel({ selectedNode, onClose }: { selectedNode: Node | null;
           <label className="text-sm font-medium">Label</label>
           <input
             type="text"
-            defaultValue={selectedNode.data.label}
+            defaultValue={selectedNode.data.label as string}
             className="input mt-1"
             placeholder="Enter label..."
           />
@@ -389,7 +389,7 @@ function PropertiesPanel({ selectedNode, onClose }: { selectedNode: Node | null;
         <div>
           <label className="text-sm font-medium">Description</label>
           <textarea
-            defaultValue={selectedNode.data.description}
+            defaultValue={selectedNode.data.description as string}
             className="input mt-1"
             rows={3}
             placeholder="Enter description..."
@@ -404,10 +404,10 @@ function PropertiesPanel({ selectedNode, onClose }: { selectedNode: Node | null;
                 type="range"
                 min="0"
                 max="100"
-                defaultValue={selectedNode.data.confidence || 85}
+                defaultValue={selectedNode.data.confidence as number || 85}
                 className="flex-1"
               />
-              <span className="text-sm font-medium w-12">{selectedNode.data.confidence || 85}%</span>
+              <span className="text-sm font-medium w-12">{selectedNode.data.confidence as number || 85}%</span>
             </div>
           </div>
         )}
@@ -452,7 +452,7 @@ export default function WorkflowsPage() {
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [showBuilder, setShowBuilder] = useState(false);
-  const [activeTab, setActiveTab] = useState<'list' | 'builder'>('list');
+  const [activeTab, setActiveTab] = useState<'list' | 'builder' | 'templates'>('list');
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge({ ...params, animated: true, style: { stroke: '#3b82f6' } }, eds)),
@@ -479,7 +479,7 @@ export default function WorkflowsPage() {
 
       const newNode: Node = {
         id: `${Date.now()}`,
-        type,
+        type: nodeType,
         position,
         data: { label: `New ${nodeType}`, description: 'Configure...' },
       };

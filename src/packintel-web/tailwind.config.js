@@ -18,6 +18,11 @@ module.exports = {
           tertiary: '#1a1a24',
           elevated: '#22222e',
         },
+        foreground: '#f4f4f5',
+        muted: {
+          DEFAULT: '#71717a',
+          foreground: '#a1a1aa',
+        },
         border: {
           DEFAULT: '#2a2a36',
           subtle: '#222230',

@@ -7,6 +7,13 @@ import type {
   RolloutActivity,
   VulnerabilityAlert,
   ThreatFeedConfig,
+  VulnerabilityFeedItem,
+  VulnerabilityMatch,
+  ExposureScore,
+  RemediationTask,
+  WorkflowDefinition,
+  WorkflowInstance,
+  Application,
 } from '@/types';
 
 // ============ Auth Store ============
