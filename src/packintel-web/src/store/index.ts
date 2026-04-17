@@ -285,6 +285,33 @@ export const useUIStore = create<UIState>((set) => ({
   setTheme: (theme) => set({ theme }),
 }));
 
+// ============ Settings Store ============
+
+interface SettingsState {
+  azureTenantId: string;
+  azureClientId: string;
+  azureClientSecret: string;
+  intuneEndpoint: string;
+  geminiApiKey: string;
+  isMockMode: boolean; // if true, bypass real integrations
+  updateSetting: <K extends keyof Omit<SettingsState, 'updateSetting'>>(key: K, value: SettingsState[K]) => void;
+}
+
+export const useSettingsStore = create<SettingsState>()(
+  persist(
+    (set) => ({
+      azureTenantId: '',
+      azureClientId: '',
+      azureClientSecret: '',
+      intuneEndpoint: 'https://graph.microsoft.com/beta/deviceManagement',
+      geminiApiKey: '',
+      isMockMode: true,
+      updateSetting: (key, value) => set({ [key]: value }),
+    }),
+    { name: 'packintel-settings' }
+  )
+);
+
 // Re-export types for convenience
 export type { VulnerabilityFeedItem, VulnerabilityMatch, ExposureScore, RemediationTask, VulnerabilityAlert } from '@/types';
 export type { WorkflowDefinition, WorkflowInstance } from '@/types';

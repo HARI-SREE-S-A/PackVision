@@ -24,6 +24,7 @@ import {
   Server,
   GitBranch,
 } from 'lucide-react';
+import { useSettingsStore } from '@/store';
 
 interface Message {
   id: string;
@@ -164,6 +165,8 @@ What would you like to do?`,
     scrollToBottom();
   }, [messages]);
 
+  const { geminiApiKey, isMockMode } = useSettingsStore();
+
   const handleSend = async () => {
     if (!input.trim()) return;
 
@@ -174,133 +177,70 @@ What would you like to do?`,
       timestamp: new Date(),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    const currentMessages = [...messages, userMessage];
+    setMessages(currentMessages);
     setInput('');
     setIsTyping(true);
 
-    // Simulate AI response
-    setTimeout(() => {
-      let response: Message;
+    const assistantMessageId = (Date.now() + 1).toString();
+    setMessages((prev) => [
+      ...prev,
+      { id: assistantMessageId, role: 'assistant', content: '', timestamp: new Date() }
+    ]);
 
-      const lowerInput = input.toLowerCase();
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: currentMessages,
+          apiKey: geminiApiKey,
+          isMockMode
+        })
+      });
 
-      if (lowerInput.includes('critical cve') || lowerInput.includes('vulnerability')) {
-        response = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          timestamp: new Date(),
-          content: `I've analyzed the vulnerability landscape for your organization:
+      if (!response.body) throw new Error('No response body');
 
-**Critical CVEs Requiring Immediate Attention:**
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder('utf-8');
 
-| CVE | Affected Assets | Risk Score | Recommended Action |
-|-----|-----------------|------------|-------------------|
-| CVE-2024-3094 (XZ Utils) | 4 | 98 | Emergency patch |
-| CVE-2024-23897 (Jenkins) | 12 | 95 | Urgent remediation |
-| CVE-2024-21762 (FortiOS) | 2 | 92 | VPN gateway update |
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
 
-**Recommended Next Steps:**
-1. Create emergency change requests for affected assets
-2. Trigger automated remediation workflows
-3. Notify application owners immediately
-
-Would you like me to create these workflows?`,
-          actions: [
-            { label: 'Create Workflow', icon: <GitBranch className="w-4 h-4" />, action: 'create_workflow', primary: true },
-            { label: 'View Details', icon: <ExternalLink className="w-4 h-4" />, action: 'view_details' },
-          ],
-        };
-      } else if (lowerInput.includes('deployment') || lowerInput.includes('rollout')) {
-        response = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          timestamp: new Date(),
-          content: `**Active Deployments:**
-
-• **Microsoft 365 Apps** - 69% complete (3,100/4,500 devices)
-  - Status: On track
-  - ETA: 4 hours
-  - Failures: 12 (0.27%)
-
-• **Zoom Workplace** - 100% complete
-  - Status: Completed successfully
-  - User satisfaction: 4.2/5
-
-Would you like me to pause, retry failed devices, or generate a deployment report?`,
-          actions: [
-            { label: 'Pause Deployment', icon: <Clock className="w-4 h-4" />, action: 'pause' },
-            { label: 'Retry Failed', icon: <RefreshCw className="w-4 h-4" />, action: 'retry' },
-            { label: 'Generate Report', icon: <BarChart3 className="w-4 h-4" />, action: 'report' },
-          ],
-        };
-      } else if (lowerInput.includes('ai health') || lowerInput.includes('service health')) {
-        response = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          timestamp: new Date(),
-          content: `**AI Services Health:**
-
-| Service | Status | Last Check | Latency |
-|---------|--------|------------|---------|
-| Azure OpenAI | Healthy | 2 min ago | 245ms |
-| GitHub Copilot | Healthy | 5 min ago | 180ms |
-| Microsoft Graph | Healthy | 1 min ago | 89ms |
-
-**Token Usage Today:**
-- Total: 142,500 tokens
-- Cost: $3.42 USD
-- Requests: 1,247
-
-All AI services are operating normally.`,
-          actions: [
-            { label: 'View Details', icon: <ExternalLink className="w-4 h-4" />, action: 'ai_details' },
-          ],
-        };
-      } else if (lowerInput.includes('workflow') || lowerInput.includes('blocked')) {
-        response = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          timestamp: new Date(),
-          content: `**Workflow Status:**
-
-• **Running:** 12 workflows
-• **Completed Today:** 47
-• **Failed:** 2
-• **Blocked:** 3
-
-**Blocked Workflows:**
-
-1. **CVE Remediation - Finance App** - Awaiting CAB approval
-2. **M365 Deployment** - User interaction required
-3. **Emergency Patch** - Integration timeout with Intune
-
-Would you like me to investigate these blockers?`,
-          actions: [
-            { label: 'View Blockers', icon: <AlertTriangle className="w-4 h-4" />, action: 'view_blockers' },
-            { label: 'Retry', icon: <RefreshCw className="w-4 h-4" />, action: 'retry' },
-          ],
-        };
-      } else {
-        response = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          timestamp: new Date(),
-          content: `I understand you're asking about "${input}".
-
-I can help with vulnerability management, deployment operations, workflow automation, change requests, and analytics.
-
-Could you rephrase your question or try one of these:
-
-• "Show critical CVEs"
-• "What's the deployment status?"
-• "Create a remediation workflow"
-• "Generate this week's report"`,
-        };
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split('\n');
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ') && !line.includes('[DONE]')) {
+            const dataStr = line.replace('data: ', '');
+            try {
+              const data = JSON.parse(dataStr);
+              const textChunk = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+              if (textChunk) {
+                setMessages((prev) => 
+                  prev.map((m) => 
+                    m.id === assistantMessageId 
+                      ? { ...m, content: m.content + textChunk } 
+                      : m
+                  )
+                );
+              }
+            } catch (e) {}
+          }
+        }
       }
-
-      setMessages((prev) => [...prev, response]);
+    } catch (error) {
+      setMessages((prev) => 
+        prev.map((m) => 
+          m.id === assistantMessageId 
+            ? { ...m, content: m.content + '\n\n**[Connection Error]** Could not stream response.' } 
+            : m
+        )
+      );
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   if (isMinimized) {

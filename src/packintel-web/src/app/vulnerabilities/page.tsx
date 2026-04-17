@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   formatDate,
   formatPercent,
@@ -450,6 +450,41 @@ function CVEDetailPanel({ cve, onClose }: { cve: typeof mockCves[0]; onClose: ()
 
 export default function VulnerabilitiesPage() {
   const [selectedCve, setSelectedCve] = useState<typeof mockCves[0] | null>(null);
+  const [cves, setCves] = useState(mockCves);
+  const [isStreaming, setIsStreaming] = useState(false);
+
+  useEffect(() => {
+    const es = new EventSource('/api/vulnerabilities/stream');
+    setIsStreaming(true);
+    
+    es.onmessage = (event) => {
+      if (event.data === '[DONE]') return;
+      try {
+        const payload = JSON.parse(event.data);
+        setCves(prev => {
+          if (prev.find(c => c.id === payload.id)) return prev;
+          
+          // Generate realistic mock matched assets if it's a new simulated stream
+          if (!payload.matchedAssets) {
+             payload.matchedAssets = ['Enterprise Core Router', 'Employee Portal'];
+             payload.affectedAssetCount = 2;
+          }
+          
+          return [payload, ...prev];
+        });
+      } catch (e) {}
+    };
+
+    es.onerror = () => {
+      setIsStreaming(false);
+      es.close();
+    };
+
+    return () => {
+      setIsStreaming(false);
+      es.close();
+    };
+  }, []);
 
   return (
     <div className="space-y-6 animate-in">
@@ -460,11 +495,18 @@ export default function VulnerabilitiesPage() {
           <p className="text-muted-foreground">NVD integration with infrastructure correlation and automated remediation</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="btn btn-outline">
-            <RefreshCw className="w-4 h-4" />
-            Sync Feeds
-          </button>
-          <button className="btn btn-primary">
+          {isStreaming ? (
+            <span className="badge badge-success animate-pulse border-accent-success px-3 py-1.5 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-accent-success block" />
+              Live Feed Active
+            </span>
+          ) : (
+            <button className="btn btn-outline" onClick={() => window.location.reload()}>
+              <RefreshCw className="w-4 h-4" />
+              Reconnect Feed
+            </button>
+          )}
+          <button className="btn btn-primary shadow-lg shadow-accent-primary/20">
             <Zap className="w-4 h-4" />
             Run Correlation Engine
           </button>
@@ -473,24 +515,24 @@ export default function VulnerabilitiesPage() {
 
       {/* Stats Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="card p-4">
+        <div className="card p-4 glass">
           <p className="text-sm text-muted-foreground">Total CVEs</p>
-          <p className="text-3xl font-bold">234,567</p>
+          <p className="text-3xl font-bold">{(234567 + (cves.length - mockCves.length)).toLocaleString()}</p>
           <p className="text-xs text-accent-success flex items-center gap-1 mt-1">
-            <TrendingUp className="w-3 h-3" /> +1,234 this week
+            <TrendingUp className="w-3 h-3" /> +{(1234 + (cves.length - mockCves.length)).toLocaleString()} this week
           </p>
         </div>
-        <div className="card p-4">
+        <div className="card p-4 glass">
           <p className="text-sm text-muted-foreground">Critical CVEs</p>
-          <p className="text-3xl font-bold text-severity-critical">12</p>
+          <p className="text-3xl font-bold text-severity-critical">{cves.filter(c => c.severity === 'critical').length + 7}</p>
           <p className="text-xs text-muted-foreground mt-1">4 with KEV status</p>
         </div>
-        <div className="card p-4">
+        <div className="card p-4 glass">
           <p className="text-sm text-muted-foreground">Matched Assets</p>
-          <p className="text-3xl font-bold">234</p>
+          <p className="text-3xl font-bold">{234 + (cves.length - mockCves.length) * 2}</p>
           <p className="text-xs text-severity-high mt-1">12 critical exposure</p>
         </div>
-        <div className="card p-4">
+        <div className="card p-4 glass">
           <p className="text-sm text-muted-foreground">Active Remediation</p>
           <p className="text-3xl font-bold">7</p>
           <p className="text-xs text-accent-success mt-1">3 completing today</p>
@@ -501,11 +543,13 @@ export default function VulnerabilitiesPage() {
       <CVEFilters />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* CVE Grid */}
+        {/* CVE Grid - Showing top 10 to prevent layout blow up if left streaming */}
         <div className="lg:col-span-2">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {mockCves.map((cve) => (
-              <CVECard key={cve.id} cve={cve} onClick={() => setSelectedCve(cve)} />
+            {cves.slice(0, 10).map((cve) => (
+              <div key={cve.id} className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+                <CVECard cve={cve} onClick={() => setSelectedCve(cve)} />
+              </div>
             ))}
           </div>
         </div>

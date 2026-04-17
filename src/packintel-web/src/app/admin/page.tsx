@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { cn, formatDate } from '@/lib/utils';
+import { useSettingsStore } from '@/store';
 import {
   Users,
   Shield,
@@ -341,6 +342,16 @@ function AuditLogTable() {
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<'users' | 'integrations' | 'audit'>('integrations');
+  const {
+    azureTenantId,
+    azureClientId,
+    azureClientSecret,
+    intuneEndpoint,
+    geminiApiKey,
+    isMockMode,
+    updateSetting,
+  } = useSettingsStore();
+  const [showSecrets, setShowSecrets] = useState({ azure: false, gemini: false });
 
   return (
     <div className="space-y-6 animate-in">
@@ -411,28 +422,139 @@ export default function AdminPage() {
 
       {/* Integrations Tab */}
       {activeTab === 'integrations' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button className="btn btn-outline">
-                <RefreshCw className="w-4 h-4" />
-                Sync All
-              </button>
-              <button className="btn btn-outline">
-                <CheckCircle className="w-4 h-4" />
-                Validate All
+        <div className="space-y-6 animate-slide-up">
+          <div className="flex items-center justify-between pb-2 border-b border-border">
+            <div>
+              <h2 className="text-lg font-semibold gradient-text">Integration Settings</h2>
+              <p className="text-sm text-muted-foreground mt-1">Configure your real-time API integrations</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm">Mock Mode</span>
+              <button
+                onClick={() => updateSetting('isMockMode', !isMockMode)}
+                className={cn(
+                  'w-11 h-6 rounded-full transition-colors relative flex items-center px-1',
+                  isMockMode ? 'bg-accent-primary' : 'bg-background-tertiary'
+                )}
+              >
+                <div
+                  className={cn(
+                    'w-4 h-4 rounded-full bg-white transition-transform',
+                    isMockMode ? 'translate-x-5' : 'translate-x-0'
+                  )}
+                />
               </button>
             </div>
-            <button className="btn btn-primary">
-              <Plus className="w-4 h-4" />
-              Add Integration
-            </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {mockIntegrations.map((integration) => (
-              <IntegrationCard key={integration.id} integration={integration} />
-            ))}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Azure AD Card */}
+            <div className="card glass hover:border-accent-primary/50 transition-colors relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-accent-primary/5 rounded-bl-full -z-10 group-hover:scale-110 transition-transform" />
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-lg bg-accent-primary/10">
+                  <Plug className="w-5 h-5 text-accent-primary" />
+                </div>
+                <h3 className="font-semibold text-lg">Azure AD / Entra ID</h3>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Tenant ID</label>
+                  <input
+                    type="text"
+                    value={azureTenantId}
+                    onChange={(e) => updateSetting('azureTenantId', e.target.value)}
+                    placeholder="e.g. contoso.onmicrosoft.com"
+                    className="input mt-1 bg-background"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Client ID</label>
+                  <input
+                    type="text"
+                    value={azureClientId}
+                    onChange={(e) => updateSetting('azureClientId', e.target.value)}
+                    placeholder="Application ID"
+                    className="input mt-1 bg-background"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Client Secret</label>
+                  <div className="relative mt-1">
+                    <input
+                      type={showSecrets.azure ? 'text' : 'password'}
+                      value={azureClientSecret}
+                      onChange={(e) => updateSetting('azureClientSecret', e.target.value)}
+                      placeholder="Enter secret..."
+                      className="input bg-background pr-10"
+                    />
+                    <button
+                      onClick={() => setShowSecrets(s => ({ ...s, azure: !s.azure }))}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showSecrets.azure ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Microsoft Intune Card */}
+            <div className="card glass hover:border-accent-secondary/50 transition-colors relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-accent-secondary/5 rounded-bl-full -z-10 group-hover:scale-110 transition-transform" />
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-lg bg-accent-secondary/10">
+                  <Shield className="w-5 h-5 text-accent-secondary" />
+                </div>
+                <h3 className="font-semibold text-lg">Microsoft Intune</h3>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Graph API Endpoint</label>
+                  <input
+                    type="text"
+                    value={intuneEndpoint}
+                    onChange={(e) => updateSetting('intuneEndpoint', e.target.value)}
+                    placeholder="https://graph.microsoft.com/beta/..."
+                    className="input mt-1 bg-background"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Google Gemini API Card */}
+            <div className="card glass hover:border-accent-tertiary/50 transition-colors relative overflow-hidden group lg:col-span-2">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-accent-tertiary/5 rounded-bl-full -z-10 group-hover:scale-110 transition-transform" />
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-lg bg-accent-tertiary/10">
+                  <Key className="w-5 h-5 text-accent-tertiary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg">Generative AI (Google Gemini)</h3>
+                  <p className="text-xs text-muted-foreground">Powers automated chatbot answering and Intune remediation script generation</p>
+                </div>
+              </div>
+              <div className="space-y-4 max-w-xl">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">API Key</label>
+                  <div className="relative mt-1">
+                    <input
+                      type={showSecrets.gemini ? 'text' : 'password'}
+                      value={geminiApiKey}
+                      onChange={(e) => updateSetting('geminiApiKey', e.target.value)}
+                      placeholder="AIzaSy..."
+                      className="input bg-background pr-10"
+                    />
+                    <button
+                      onClick={() => setShowSecrets(s => ({ ...s, gemini: !s.gemini }))}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showSecrets.gemini ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

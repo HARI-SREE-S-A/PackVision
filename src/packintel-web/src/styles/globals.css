@@ -52,6 +52,15 @@
 }
 
 @layer components {
+  /* Premium Glassmorphism */
+  .glass {
+    @apply bg-background/40 backdrop-blur-md border border-white/5 shadow-xl;
+  }
+  
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-accent-primary to-accent-secondary;
+  }
+
   /* Card Styles */
   .card {
     @apply rounded-lg border border-border bg-background-elevated p-6;

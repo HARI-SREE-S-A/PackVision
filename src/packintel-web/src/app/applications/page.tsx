@@ -166,6 +166,38 @@ function ApplicationDetailPanel({
   app: typeof mockApplications[0];
   onClose: () => void;
 }) {
+  const [deployStream, setDeployStream] = useState<string[]>([]);
+  const [isDeploying, setIsDeploying] = useState(false);
+  const [catalogSync, setCatalogSync] = useState<'idle' | 'syncing' | 'synced'>('idle');
+
+  const startDeployment = () => {
+    setIsDeploying(true);
+    setDeployStream([]);
+    const es = new EventSource('/api/packaging/deploy');
+    es.onmessage = (event) => {
+      if (event.data === '[DONE]') {
+        es.close();
+        setIsDeploying(false);
+        return;
+      }
+      try {
+        const payload = JSON.parse(event.data);
+        setDeployStream(prev => [...prev, payload.message]);
+      } catch (e) {}
+    };
+    es.onerror = () => {
+      es.close();
+      setIsDeploying(false);
+    };
+  };
+
+  const syncCatalog = () => {
+    setCatalogSync('syncing');
+    setTimeout(() => {
+      setCatalogSync('synced');
+    }, 2500);
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm">
       <div className="fixed right-0 top-0 h-full w-full max-w-3xl bg-background-secondary border-l border-border overflow-y-auto animate-slide-up">
@@ -188,27 +220,45 @@ function ApplicationDetailPanel({
 
           {/* Status & Criticality */}
           <div className="flex items-center gap-3 mb-6">
-            <span className={`badge ${`badge-${app.criticality}`}`}>{app.criticality} criticality</span>
+            <span className={`badge badge-${app.criticality}`}>{app.criticality} criticality</span>
             <span className="badge bg-accent-primary/10 text-accent-primary border border-accent-primary/20">
               {app.status.replace('_', ' ')}
             </span>
             <span className="badge bg-accent-secondary/10 text-accent-secondary border border-accent-secondary/20">
               {app.packageType}
             </span>
+            {catalogSync === 'synced' && (
+              <span className="badge bg-accent-success/10 text-accent-success border border-accent-success/20 animate-fade-in">
+                Enterprise Catalog: Verified v{app.version}
+              </span>
+            )}
           </div>
 
           {/* Quick Actions */}
           <div className="grid grid-cols-4 gap-3 mb-6">
-            <button className="btn btn-outline flex-col items-center py-3 h-auto">
-              <GitBranch className="w-5 h-5 mb-1" />
-              <span className="text-xs">Create Workflow</span>
+            <button 
+              onClick={syncCatalog}
+              disabled={catalogSync === 'syncing'}
+              className={cn(
+                "btn btn-outline flex-col items-center py-3 h-auto hover:bg-accent-secondary/10 hover:border-accent-secondary transition-colors",
+                catalogSync === 'syncing' ? "animate-pulse" : ""
+              )}
+            >
+              <CheckCircle className="w-5 h-5 mb-1 text-accent-secondary" />
+              <span className="text-xs">
+                {catalogSync === 'syncing' ? 'Checking Catalog...' : 'Enterprise Catalog'}
+              </span>
             </button>
-            <button className="btn btn-outline flex-col items-center py-3 h-auto">
-              <Bot className="w-5 h-5 mb-1" />
-              <span className="text-xs">Smart Package</span>
+            <button 
+              onClick={startDeployment}
+              disabled={isDeploying}
+              className="btn btn-outline flex-col items-center py-3 h-auto hover:bg-accent-primary/10 hover:border-accent-primary transition-colors"
+            >
+              <Bot className={cn("w-5 h-5 mb-1 text-accent-primary", isDeploying && "animate-bounce")} />
+              <span className="text-xs">{isDeploying ? 'Packaging...' : 'Smart Package'}</span>
             </button>
-            <button className="btn btn-outline flex-col items-center py-3 h-auto">
-              <AlertTriangle className="w-5 h-5 mb-1" />
+            <button className="btn btn-outline flex-col items-center py-3 h-auto hover:bg-severity-high/10">
+              <AlertTriangle className="w-5 h-5 mb-1 text-severity-high" />
               <span className="text-xs">Scan Vulnerabilities</span>
             </button>
             <button className="btn btn-outline flex-col items-center py-3 h-auto">
@@ -238,7 +288,7 @@ function ApplicationDetailPanel({
           </div>
 
           {/* AI Confidence */}
-          <div className="card p-4 mb-6">
+          <div className="card p-4 mb-6 glass border-l-4 border-l-accent-secondary">
             <div className="flex items-center gap-2 mb-4">
               <Bot className="w-5 h-5 text-accent-secondary" />
               <h3 className="font-semibold">AI Confidence Score</h3>
@@ -265,25 +315,26 @@ function ApplicationDetailPanel({
             </div>
           </div>
 
-          {/* Tabs */}
-          <div className="border-b border-border mb-6">
-            <div className="flex gap-4">
-              {['Packages', 'Deployments', 'Validation', 'History'].map((tab) => (
-                <button
-                  key={tab}
-                  className="pb-3 px-1 text-sm font-medium border-b-2 border-transparent hover:border-accent-primary data-[active]:border-accent-primary"
-                >
-                  {tab}
-                </button>
-              ))}
+          {/* Real-Time Deployment Log */}
+          {(deployStream.length > 0 || isDeploying) && (
+            <div className="mt-6">
+              <h3 className="font-semibold mb-2">Live Packaging & Deployment Log</h3>
+              <div className="bg-[#0d0d12] border border-border rounded-lg p-4 font-mono text-xs overflow-auto max-h-64 space-y-1">
+                {deployStream.map((log, idx) => (
+                  <div key={idx} className="flex">
+                    <span className="text-accent-primary mr-2">&gt;</span>
+                    <span className={log.includes('successfully') ? 'text-accent-success font-bold' : 'text-foreground'}>{log}</span>
+                  </div>
+                ))}
+                {isDeploying && (
+                  <div className="flex animate-pulse">
+                    <span className="text-accent-primary mr-2">&gt;</span>
+                    <span className="text-muted-foreground">_</span>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-
-          {/* Content */}
-          <div className="text-center py-12 text-muted-foreground">
-            <Package className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p>Package history and details will appear here</p>
-          </div>
+          )}
         </div>
       </div>
     </div>
